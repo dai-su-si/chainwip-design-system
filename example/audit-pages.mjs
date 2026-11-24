@@ -210,6 +210,48 @@ async function auditRouting(page) {
   await assertRoute(page, "/books", "図書");
 }
 
+async function auditLayoutTokens(page, width) {
+  await page.goto(new URL("/managed-books?layout=custom", base).href);
+  const table = page.getByRole("region", { name: "一覧管理", exact: true }).getByRole("table");
+  const columnWidth = async (name) => (await table.getByRole("columnheader", { name, exact: true }).boundingBox()).width;
+  assert.equal(await columnWidth("書籍番号"), 128);
+  if (width < 768) {
+    assert.equal(await columnWidth("書名"), 160);
+    assert.equal(await table.getByRole("columnheader", { name: "操作", exact: true }).count(), 0);
+  } else {
+    assert.equal(await columnWidth("操作"), 72);
+  }
+  await page.screenshot({ path: fileURLToPath(new URL(`layout-list-${width}.png`, output)), animations: "disabled" });
+
+  await page.goto(new URL("/fields?layout=custom", base).href);
+  const title = page.getByRole("heading", { name: "基本情報", exact: true });
+  await title.waitFor();
+  const gaps = await title.evaluate((heading) => {
+    const panel = heading.closest("[data-headed-card]");
+    const [first, next] = panel.querySelectorAll(".ant-form-item-vertical");
+    const label = first.querySelector("label").getBoundingClientRect();
+    const content = first.querySelector(".ant-form-item-control-input-content > :first-child").getBoundingClientRect();
+    return {
+      headingToBody: label.top - heading.getBoundingClientRect().bottom,
+      formLabelGap: content.top - label.bottom,
+      formItemGap: next.querySelector("label").getBoundingClientRect().top - content.bottom,
+      betweenPanels: parseFloat(getComputedStyle(panel.closest("[data-panel-column]")).rowGap),
+    };
+  });
+  assert.deepEqual(gaps, { headingToBody: 28, formLabelGap: 12, formItemGap: 16, betweenPanels: 16 });
+  await page.screenshot({ path: fileURLToPath(new URL(`layout-fields-${width}.png`, output)), animations: "disabled" });
+
+  await page.goto(new URL("/about?layout=custom", base).href);
+  const actionPanel = panelWithTitle(page.getByRole("main"), "操作");
+  const items = actionPanel.locator("[data-panel-action-item]");
+  await items.first().waitFor();
+  const itemLayout = await items.evaluateAll(([first, second]) => ({
+    betweenActions: second.getBoundingClientRect().top - first.getBoundingClientRect().bottom,
+    relatedContent: first.children[1].getBoundingClientRect().top - first.children[0].getBoundingClientRect().bottom,
+  }));
+  assert.deepEqual(itemLayout, { betweenActions: 0, relatedContent: 8 });
+}
+
 const pages = [
   {
     id: "books",
@@ -326,6 +368,11 @@ try {
         if (screen.id === "managed-list") await auditListLoading(page, width);
         await auditActionPlacement(main, screen.type, width);
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "ページが横にはみ出す");
+        if (screen.id === "fields") {
+          await auditLayoutTokens(page, width);
+          await page.goto(new URL(screen.route, base).href);
+          await assertRoute(page, screen.route, screen.label);
+        }
       } catch (error) {
         reportFinding({ id: "check-failed", message: error.message });
       } finally {

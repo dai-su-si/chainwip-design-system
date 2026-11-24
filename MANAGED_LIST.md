@@ -59,3 +59,32 @@ export function BooksPage({ books, addBook, editBook }: {
 検索付きの実装は、図書貸出サンプルの[標準一覧](http://localhost:5120/managed-books)で確認できます。
 
 データ状態ごとの確認には、[空](http://localhost:5120/managed-books?state=empty)、[初回読み込み](http://localhost:5120/managed-books?state=loading)、[再取得中](http://localhost:5120/managed-books?state=refreshing)、[取得失敗](http://localhost:5120/managed-books?state=error)、[長文・多列](http://localhost:5120/managed-books?state=wide)の URL を使います。
+
+## 固定条件のある一覧を組み込む
+
+親画面が館と対象月を決める貸出報告書では、親の値を一覧の取得条件に使います。ユーザーが変更する条件だけを `filters` に入れ、検索条件が変わったら先頭ページから取り直します。固定条件も検索欄に表示する必要がある場合は、その欄を `disabled: true` で指定します。`onSearch` には表示した固定欄の値も含まれるため、取得条件の固定値は常に親画面から取ります。親画面で固定値を確認できる場合は、その欄を `filters` から省けます。
+
+```tsx
+<HeadedCard title="貸出記録">
+  <ManagedListPage
+    rowKey={(loan) => loan.id}
+    columns={loanColumns}
+    data={loans}
+    pagination={pagination}
+    filters={[
+      { key: "month", label: "対象月", kind: "month", value: report.month, disabled: true },
+      { key: "title", label: "書名", kind: "text", value: search.title },
+    ]}
+    onSearch={({ title }) => updateLoanSearch({
+      libraryId: report.libraryId,
+      month: report.month,
+      title: title ?? "",
+      page: 1,
+    })}
+  />
+</HeadedCard>
+```
+
+この例の `loans` は、親画面が決めた館・対象月と、利用者に許可された範囲の取得結果です。検索、ページ送り、並べ替えのどの取得でも、同じ固定条件と権限を適用します。
+
+`ManagedListPage` は画面全体の枠を作らないため、検索や行操作が必要な一覧をパネルに置けます。固定条件だけで検索欄を表示しない場合は `filters` と `onSearch` を省けます。「追加」「再試行」に該当する操作もない場合、一覧のツールバーは表示されません。表示中心の子リストは `DataTable` を使います。報告書の Excel 出力など、親画面に対する操作は親画面で管理します。パネル構成型では、その操作の対象となるパネルの右上に置きます。

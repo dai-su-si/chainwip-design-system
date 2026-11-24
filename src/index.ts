@@ -3,6 +3,7 @@
 // テーマ
 export { ThemeProvider } from "./theme/ThemeProvider";
 export type { ThemeProviderProps } from "./theme/ThemeProvider";
+export type { LayoutTokens } from "./theme/layoutTokens";
 export { Theme as ThemeIcon } from "./icons/Theme";
 
 // 画面の枠

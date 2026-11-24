@@ -20,11 +20,6 @@ const SHARED_TOKEN = {
 const CONTROL_COMPONENTS = {
   Button: { primaryShadow: "none", defaultShadow: "none", dangerShadow: "none" },
   Input: { activeShadow: "none" },
-  Form: {
-    // ラベルの下端からフィールドの表示領域までの間隔。
-    verticalLabelPadding: "0 0 8px",
-    itemMarginBottom: 20,
-  },
 };
 
 export const defaultDesignValues: DesignValues = {
@@ -105,6 +100,7 @@ export const defaultDesignValues: DesignValues = {
     betweenActions: 16,
     relatedContent: 8,
   },
+  form: { labelGap: 8, itemGap: 20 },
   // 開始・終了時刻の入力欄（Col span 8、Row gutter token.margin）、複数行の文の欄で最も多い行数（2〜6）、
   // 日付（YYYY-MM-DD（dd））・月（MONTH_PICKER_FORMAT）・時刻（HH:mm）の表示書式
   field: {

@@ -98,6 +98,11 @@ export type DesignValues = {
     /** 操作や入力部品とその補足の間隔（px） */
     relatedContent: number;
   };
+  /** フォームの縦方向の余白（px） */
+  form: {
+    labelGap: number;
+    itemGap: number;
+  };
   /** 原子の欄（src/fields/ の TextField・RangeField など） */
   field: {
     /** 開始と終了の組の1つの欄の幅（antdの24の段のうちの段の数）。8で幅1/3。3つ目の場所（組に付く操作）も同じ幅 */

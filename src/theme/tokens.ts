@@ -1,6 +1,6 @@
 import { theme } from "antd";
 import type { ConfigProviderProps, ThemeConfig } from "antd";
-import type { ThemeValues } from "./designValues";
+import type { DesignValues, ThemeValues } from "./designValues";
 
 /**
  * 表の選んだ行の色を、明暗の計算（algorithm）と token から導く（雛形antd-adminのテーマの作りのまま）。
@@ -14,8 +14,13 @@ function buildTableTokens(cfg: ThemeConfig) {
   };
 }
 
-/** 共通の設定とブランドの主色から、Ant Design のテーマを作る */
-export function buildThemeConfig(values: ThemeValues, darkMode: boolean, primaryColor?: string): ConfigProviderProps {
+/** 共通の設定、フォームの余白、ブランドの主色から Ant Design のテーマを作る */
+export function buildThemeConfig(
+  values: ThemeValues,
+  form: DesignValues["form"],
+  darkMode: boolean,
+  primaryColor?: string,
+): ConfigProviderProps {
   const algorithm = darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm;
   const token = primaryColor === undefined ? values.token : { ...values.token, colorPrimary: primaryColor };
   return {
@@ -24,6 +29,11 @@ export function buildThemeConfig(values: ThemeValues, darkMode: boolean, primary
       token,
       components: {
         ...values.components,
+        Form: {
+          ...values.components.Form,
+          verticalLabelPadding: `0 0 ${form.labelGap}px`,
+          itemMarginBottom: form.itemGap,
+        },
         Table: {
           ...buildTableTokens({ algorithm, token }),
           ...values.components.Table,

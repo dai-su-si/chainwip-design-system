@@ -9,7 +9,8 @@ import { useEffect, useLayoutEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { buildThemeConfig } from "./tokens";
 import { DesignValuesContext } from "./designValues";
-import { defaultDesignValues } from "./defaultDesignValues";
+import { resolveLayoutTokens } from "./layoutTokens";
+import type { LayoutTokens } from "./layoutTokens";
 import { requiredMark } from "../fields/RequiredMark";
 import "./global.css";
 
@@ -17,15 +18,19 @@ export type ThemeProviderProps = {
   darkMode: boolean;
   /** ブランドの主色。省略時は Ant Design の既定色を使う */
   primaryColor?: string;
+  /** アプリ共通の列幅と余白。未指定の項目は共通の既定値を使う。 */
+  layoutTokens?: LayoutTokens;
   /** antdのロケール（例: ja_JP）。画面の言葉は使う側が決めるため、渡してもらう */
   locale?: ConfigProviderProps["locale"];
   children: ReactNode;
 };
 
-export function ThemeProvider({ darkMode, primaryColor, locale, children }: ThemeProviderProps) {
+export function ThemeProvider({ darkMode, primaryColor, layoutTokens, locale, children }: ThemeProviderProps) {
+  const values = useMemo(() => resolveLayoutTokens(layoutTokens), [layoutTokens]);
+  const { theme, form, scrollbar } = values;
   const configProviderProps = useMemo(
-    () => buildThemeConfig(darkMode ? defaultDesignValues.theme.dark : defaultDesignValues.theme.light, darkMode, primaryColor),
-    [darkMode, primaryColor],
+    () => buildThemeConfig(darkMode ? theme.dark : theme.light, form, darkMode, primaryColor),
+    [theme, form, darkMode, primaryColor],
   );
 
   useEffect(() => {
@@ -34,7 +39,6 @@ export function ThemeProvider({ darkMode, primaryColor, locale, children }: Them
 
   // スクロールバーの値をCSS変数にする（global.css が読む）。描く前に置くため useLayoutEffect にする
   useLayoutEffect(() => {
-    const { scrollbar } = defaultDesignValues;
     const colors = darkMode ? scrollbar.dark : scrollbar.light;
     const style = document.documentElement.style;
     style.setProperty("--app-scrollbar-size", `${scrollbar.size}px`);
@@ -43,10 +47,10 @@ export function ThemeProvider({ darkMode, primaryColor, locale, children }: Them
     style.setProperty("--app-scrollbar-track", colors.track);
     style.setProperty("--app-scrollbar-thumb", colors.thumb);
     style.setProperty("--app-scrollbar-thumb-hover", colors.thumbHover);
-  }, [darkMode]);
+  }, [darkMode, scrollbar]);
 
   return (
-    <DesignValuesContext.Provider value={defaultDesignValues}>
+    <DesignValuesContext.Provider value={values}>
       {/* autoInsertSpace: 2文字の漢字のボタン（出勤・保存など）に空白が入らないようにする。
           requiredMark: 必須の印を項目名の後ろに出す */}
       <ConfigProvider

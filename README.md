@@ -7,7 +7,7 @@ TanStack Start と Cloudflare Workers を対象に、Ant Design で業務画面�
 React 19、Ant Design 6、TypeScript を使うコンポーネントライブラリです。GitHub のタグを指定してインストールします。依存バージョンは [package.json](package.json) の `peerDependencies` を参照してください。
 
 ```sh
-npm install git+https://github.com/dai-su-si/chainwip-design-system.git#v0.19.0
+npm install git+https://github.com/dai-su-si/chainwip-design-system.git#v0.19.1
 ```
 
 ```tsx
@@ -24,6 +24,37 @@ export function App() {
 
 ブランドの設定には `ThemeProvider` の `primaryColor` と `Sidebar` の `brandName`・`logoSrc` を使います。データの取得、ルーティング、認証、業務ルールは利用側のアプリで実装します。
 
+## 列幅と余白の設定
+
+`ThemeProvider` の `layoutTokens` では、アプリ全体で共通部品が使う列幅と余白を設定できます。たとえば、短い値の列幅とフォームの項目間隔だけを変える場合は次のように指定します。
+
+```tsx
+<ThemeProvider
+  darkMode={false}
+  layoutTokens={{
+    columns: { shortColumnEm: 8 },
+    spacing: { formItemGap: 16 },
+  }}
+>
+  <App />
+</ThemeProvider>
+```
+
+| 設定 | 用途 | 既定値 |
+| --- | --- | --- |
+| `columns.shortColumnEm` | 短い値の列幅 | 9em |
+| `columns.longColumnMinEm` | 表の最小幅を計算するときの、長い値の列の幅 | 7em |
+| `columns.actionsColumnWidth` | 操作列の幅 | 60px |
+| `spacing.pageGutter` | パネル構成型の段・列の間隔 | 16px |
+| `spacing.betweenPanels` | パネル同士の間隔 | 16px |
+| `spacing.headingToBody` | パネルの見出しと本文の間隔 | 24px |
+| `spacing.betweenActions` | 各種操作パネルの操作同士の間隔 | 16px |
+| `spacing.relatedContent` | 操作や入力部品と対応する補足の間隔 | 8px |
+| `spacing.formLabelGap` | フォームのラベルと入力欄の間隔 | 8px |
+| `spacing.formItemGap` | フォームの項目同士の間隔 | 20px |
+
+指定値は単位なしの数値で、列幅は正の有限値、余白は0以上の有限値を使用できます。`Em` で終わる列幅は基準文字サイズの倍数です。ほかの値の単位は px です。省略または無効な値には、その項目の既定値が適用されます。
+
 ## 入力欄
 
 - 固定の選択肢から複数のタグを選ぶ場合は `TagCloudField` を使います。利用者は表示名で検索し、フォームは選んだ選択肢の値の配列を受け取ります。選んだタグを詳細や表に表示する場合は `PillTagList`、利用者が任意の語を追加する場合は `WordListField` を使います。
@@ -32,7 +63,7 @@ export function App() {
 
 ## サンプルと開発
 
-標準の一覧画面は [一覧管理画面の公開 API](MANAGED_LIST.md) を参照してください。旧版からの更新手順は [リリースノート](CHANGELOG.md) に記載しています。
+標準の一覧画面は [一覧管理画面の公開 API](MANAGED_LIST.md) を参照してください。v0.18.0 から更新する場合は [移行ガイド](MIGRATION.md)、各版の変更内容は [リリースノート](CHANGELOG.md) を参照してください。
 
 ```sh
 npm ci
