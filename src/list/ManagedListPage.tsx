@@ -355,36 +355,35 @@ export function ManagedListPage<Row extends object>({
         {loading ? "一覧を読み込み中です" : refreshing ? "一覧を更新中です" : ""}
       </div>
       {(data.status !== "error" || result) && (
-        <div aria-busy={loading || refreshing}>
-          <DataTable<Row>
-            rowKey={rowKey}
-            columns={tableColumns}
-            dataSource={result?.rows}
-            loading={loading}
-            locale={emptyText === undefined ? undefined : { emptyText }}
-            pagination={result && (result.total > pagination.pageSize || pagination.page > 1) ? {
-              total: result.total,
-              current: pagination.page,
-              pageSize: pagination.pageSize,
-              showSizeChanger: pagination.showSizeChanger ?? false,
-              showTotal: pagination.showSizeChanger ? (total) => `${total}件` : undefined,
-              onChange: pagination.onChange,
-            } : false}
-            size="small"
-            tableLayout="fixed"
-            components={rowActions ? { body: { row: ManagedRow } } : undefined}
-            onRow={rowMenus.size && rowActions ? (row) => {
-              const menu = rowMenus.get(rowKey(row));
-              const rowProps: ManagedRowProps = {
-                actionMenu: menu?.items,
-                actionLabel: menu && `操作: ${menu.rowLabel}`,
-                narrow: screens.md === false,
-              };
-              return rowProps;
-            } : undefined}
-            onChange={onTableChange}
-          />
-        </div>
+        <DataTable<Row>
+          rowKey={rowKey}
+          columns={tableColumns}
+          dataSource={result?.rows}
+          loading={loading}
+          aria-busy={refreshing}
+          locale={emptyText === undefined ? undefined : { emptyText }}
+          pagination={result && (result.total > pagination.pageSize || pagination.page > 1) ? {
+            total: result.total,
+            current: pagination.page,
+            pageSize: pagination.pageSize,
+            showSizeChanger: pagination.showSizeChanger ?? false,
+            showTotal: pagination.showSizeChanger ? (total) => `${total}件` : undefined,
+            onChange: pagination.onChange,
+          } : false}
+          size="small"
+          tableLayout="fixed"
+          components={rowActions ? { body: { row: ManagedRow } } : undefined}
+          onRow={rowMenus.size && rowActions ? (row) => {
+            const menu = rowMenus.get(rowKey(row));
+            const rowProps: ManagedRowProps = {
+              actionMenu: menu?.items,
+              actionLabel: menu && `操作: ${menu.rowLabel}`,
+              narrow: screens.md === false,
+            };
+            return rowProps;
+          } : undefined}
+          onChange={onTableChange}
+        />
       )}
     </section>
   );

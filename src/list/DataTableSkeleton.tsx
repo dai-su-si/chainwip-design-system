@@ -325,6 +325,7 @@ export function DataTableSkeleton<RecordType extends object = object>({
         columns={skeletonColumns}
         dataSource={skeletonData}
         rowKey={(record) => String((record as unknown as { __sk: string }).__sk)}
+        onRow={() => ({ "data-chainwip-skeleton-row": "", "aria-hidden": true })}
         pagination={skeletonPagination}
         rowSelection={selection}
         scroll={scroll}

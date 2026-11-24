@@ -17,6 +17,8 @@ const DATA_TABLE_ROOT_CLASS = "data-table__table";
 const DEFAULT_PAGE_SIZE = 10;
 
 export type DataTableProps<RecordType extends object = object> = {
+  /** Mark a background refresh as busy while keeping the supplied rows visible. */
+  "aria-busy"?: boolean;
   /**
    * When the table uses `scroll.y`, set true so the frame does not shrink in the flex column
    * and optional `frameHeight` can pin the outer height.
@@ -41,6 +43,7 @@ export function DataTable<RecordType extends object = object>(
   props: DataTableProps<RecordType>,
 ): ReactElement {
   const {
+    "aria-busy": ariaBusy,
     lockScrollHeight,
     maxHeight,
     frameHeight,
@@ -139,7 +142,7 @@ export function DataTable<RecordType extends object = object>(
         overflow: "hidden",
       }}
     >
-      <div ref={frameRef} style={outerStyle}>
+      <div ref={frameRef} style={outerStyle} data-chainwip-table="" aria-busy={spinLoading || ariaBusy === true}>
         <div
           className="data-table__inner"
           style={{

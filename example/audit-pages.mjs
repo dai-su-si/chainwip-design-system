@@ -131,6 +131,48 @@ async function auditManagedList(page, main) {
   await list.getByRole("cell", { name: "B1", exact: true }).waitFor();
 }
 
+async function auditListLoading(page, width) {
+  const list = page.getByRole("region", { name: "一覧管理", exact: true });
+  const table = list.locator("[data-chainwip-table]");
+  const skeleton = table.locator("[data-chainwip-skeleton-row]");
+  const book = table.getByRole("cell", { name: "B1", exact: true });
+
+  await page.goto(new URL("/managed-books?state=loading", base).href);
+  await skeleton.first().waitFor();
+  assert.equal(await table.getAttribute("aria-busy"), "true");
+  assert.equal(await skeleton.first().getAttribute("aria-hidden"), "true");
+  assert.equal(await book.count(), 0);
+  assert.equal(await table.getByRole("button", { name: /^操作:/ }).count(), 0);
+  await list.getByText("一覧を読み込み中です", { exact: true }).waitFor();
+  await page.screenshot({
+    path: fileURLToPath(new URL(`managed-list-loading-${width}.png`, output)),
+    animations: "disabled",
+  });
+  await openMenu(page, "標準一覧");
+  await book.waitFor();
+  assert.equal(await skeleton.count(), 0);
+  assert.equal(await table.getAttribute("aria-busy"), "false");
+
+  await page.goto(new URL("/managed-books?state=refreshing", base).href);
+  await book.waitFor();
+  assert.equal(await table.getAttribute("aria-busy"), "true");
+  assert.equal(await skeleton.count(), 0);
+  await list.getByText("一覧を更新中です", { exact: true }).waitFor();
+  await page.screenshot({
+    path: fileURLToPath(new URL(`managed-list-refreshing-${width}.png`, output)),
+    animations: "disabled",
+  });
+  await book.click();
+  await page.getByRole("menuitem", { name: "編集", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "図書の編集" });
+  assert.equal(await dialog.getByRole("textbox", { name: "書名" }).inputValue(), "はじめての園芸");
+  await dialog.getByRole("button", { name: "キャンセル", exact: true }).click();
+  await dialog.waitFor({ state: "hidden" });
+  await openMenu(page, "標準一覧");
+  await book.waitFor();
+  assert.equal(await table.getAttribute("aria-busy"), "false");
+}
+
 async function assertRoute(page, path, label, heading) {
   const breadcrumb = page.getByRole("navigation", { name: "パンくず" });
   await breadcrumb.getByText(label, { exact: true }).waitFor();
@@ -281,6 +323,7 @@ try {
         await assertRoute(page, screen.route, screen.label);
         const main = page.getByRole("main");
         await screen.check(page, main, reportFinding);
+        if (screen.id === "managed-list") await auditListLoading(page, width);
         await auditActionPlacement(main, screen.type, width);
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "ページが横にはみ出す");
       } catch (error) {
