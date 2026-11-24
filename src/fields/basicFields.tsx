@@ -1,7 +1,9 @@
 // 原子の欄のうち、1つの値を持つ欄: 1行の文・複数行の文・はい・いいえ・日付・月・時刻・数値・表示だけ。
-import { Checkbox, Form, Input, Typography, theme } from "antd";
+import { Checkbox, DatePicker, Form, Input, Typography, theme } from "antd";
 import type { FormItemProps } from "antd";
 import type { Store } from "antd/es/form/interface";
+import type { Dayjs } from "dayjs";
+import { useId } from "react";
 import type { ReactNode } from "react";
 import { useDesignValues } from "../theme/designValues";
 import { controlElement, itemProps } from "./fieldBase";
@@ -107,18 +109,46 @@ export function CheckField<Values = Store>({ label, text, disabled, ...base }: C
 export type DateFieldProps<Values = Store> = FieldBaseProps<Values> &
   Omit<ControlCommon, "ariaLabel"> &
   (
-    | ({ picker?: "date" } & ControlOptions["date"])
-    | ({ picker: "month" } & ControlOptions["month"])
-    | ({ picker: "time" } & ControlOptions["time"])
+    | ({ picker?: "date"; multiple?: false } & ControlOptions["date"])
+    | ({ picker: "month"; multiple?: false } & ControlOptions["month"])
+    | ({ picker: "time"; multiple?: false } & ControlOptions["time"])
+    | ({
+        picker?: "date";
+        multiple: true;
+        defaultPickerValue?: Dayjs;
+        onChange?: (values: Dayjs[] | null) => void;
+      } & Omit<ControlOptions["date"], "onChange">)
   );
 
 /**
- * 日付・月・時刻の欄（DatePicker・TimePicker）。値は dayjs。選べない日・月・時刻を渡せる。
+ * 日付・月・時刻の欄（DatePicker・TimePicker）。値は dayjs。multiple の日付欄は dayjs の配列。
  * allowClear={false} で空にさせない。onChange は値が変わったときに呼ぶ（フォームへの反映は欄が行う）
  */
 export function DateField<Values = Store>(props: DateFieldProps<Values>) {
   const values = useDesignValues().field;
+  const inputId = useId();
   const common = { placeholder: props.placeholder, disabled: props.disabled };
+  if (props.multiple) {
+    return (
+      <Form.Item<Values> {...itemProps(props)} htmlFor={inputId}>
+        <DatePicker<Dayjs, true>
+          {...common}
+          multiple
+          format={values.formats.date}
+          defaultPickerValue={props.defaultPickerValue}
+          disabledDate={props.disabledDate}
+          allowClear={props.allowClear}
+          onChange={props.onChange}
+          ref={(picker) => {
+            // The Ant Design multiple selector does not forward id to its input.
+            const input = picker?.nativeElement.querySelector("input");
+            if (input) input.id = inputId;
+          }}
+          style={{ width: "100%" }}
+        />
+      </Form.Item>
+    );
+  }
   const picker = { allowClear: props.allowClear, onChange: props.onChange };
   const control =
     props.picker === "time"

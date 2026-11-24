@@ -4,8 +4,7 @@
 
 const PREFIX = "chainwip-design-system:rows:";
 
-/** 今の画面のパス。useListPage の表を見分けるキーの既定（1つの画面に一覧の表は1つのため） */
-export function currentPathKey(): string {
+function currentPathKey(): string {
   return typeof window === "undefined" ? "" : window.location.pathname;
 }
 

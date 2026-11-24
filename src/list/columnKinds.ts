@@ -1,5 +1,5 @@
 // 一覧の表の列の種類と幅の仕組み。列は「短い値」「長い値」「操作」の3種類にし、幅の決め方はこのファイルだけに置く。
-// 幅の値（短い値と長い値の倍数、操作の列のpx）は使う側が ThemeProvider の values.list に渡す。
+// 列の幅は共通設定から取得する。
 // 各画面は種類を指定するだけにし、画面ごとにpxを書かない
 import { Grid, theme } from "antd";
 import type { Breakpoint } from "antd";
@@ -16,7 +16,7 @@ export const ACTIONS_COLUMN_PRIORITY: { responsive: Breakpoint[] } = { responsiv
  * - short: 日付・時刻・時間帯・数値・状態・対象月・期間など。幅は文字の大きさ×values.list.shortColumnEm。省かない
  * - long: 名前・題名・内容など。幅を決めず、短い値と操作の列の残りを分け合う。
  *   1行に収まらない分は「…」で省き、全文はセルのtitle（マウスを載せると出る）で見る
- * 操作の列は、RowActions の rowActionsColumn（幅は values.list.actionsColumnWidth。DataTable が入れる）を使う。
+ * 操作の列の幅は、共通設定の actionsColumnWidth に揃える。
  */
 export function useColumnKinds() {
   const { token } = theme.useToken();

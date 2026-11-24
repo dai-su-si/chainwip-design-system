@@ -1,6 +1,6 @@
 {
   "name": "chainwip-design-system",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -10,11 +10,15 @@
   },
   "files": [
     "src",
+    "DESIGN_PRINCIPLES.md",
+    "MANAGED_LIST.md",
     "LICENSE"
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p example/tsconfig.json",
     "example": "vite --config example/vite.config.ts",
+    "example:check-list": "node example/check-managed-list.mjs",
+    "example:audit": "npm run typecheck && npm run example:check-list && node example/audit-pages.mjs",
     "example:screens": "node example/screens.mjs"
   },
   "peerDependencies": {
@@ -22,8 +26,7 @@
     "dayjs": "^1.11.23",
     "lucide-react": "^1.7.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "zod": "^4.3.6"
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@fontsource-variable/noto-sans-jp": "^5.3.1",
@@ -37,8 +40,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "typescript": "~5.9.3",
-    "vite": "^7.3.7",
-    "zod": "^4.3.6"
+    "vite": "^7.3.7"
   },
   "packageManager": "npm@10.9.8"
 }

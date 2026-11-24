@@ -5,7 +5,7 @@ import { useDesignValues } from "../theme/designValues";
 
 /**
  * 一覧の中の区分・状態の札。雛形のデモのUsersの「Roles」列の Tag と同じ見た目（枠線・角丸・背景なし）。
- * 色は区別に要るときだけ付ける（例: 「進行中」の状態だけに色を付ける）。角の丸みは使う側の values.list.pillRadius。
+ * 色は区別に要るときだけ付ける（例: 「進行中」の状態だけに色を付ける）。角の丸みは共通設定に従う。
  * wrap を付けると、長い文字を列の幅で折り返す（既定は1行のまま）。
  */
 export function PillTag({

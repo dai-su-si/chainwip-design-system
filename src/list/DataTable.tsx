@@ -2,7 +2,7 @@ import { ConfigProvider, Flex, Table, theme } from "antd";
 import type { TableProps } from "antd";
 import type { CSSProperties, ReactElement, ReactNode, Ref } from "react";
 import { useEffect, useMemo } from "react";
-import { MenuRow, findRowMenu, withActionsColumnWidth } from "./RowActions";
+import { withOpenColumnWidth } from "./rowOpenColumn";
 import { defaultRowCountKey, readRowCount, writeRowCount } from "./rememberedRowCount";
 import { useDesignValues } from "../theme/designValues";
 import { useMinTableWidth } from "./columnKinds";
@@ -32,7 +32,7 @@ export type DataTableProps<RecordType extends object = object> = {
   frameRef?: Ref<HTMLDivElement | null>;
   /**
    * 前に読み終えたときの行数を覚えるキー。読み込み中は、その行数で灰色の行を出す。
-   * 既定は画面のパスと列の名前・題（defaultRowCountKey）。useListPage の tableProps は今の画面のパスを渡す
+   * 既定は画面のパスと列の名前・題（defaultRowCountKey）。
    */
   rowCountKey?: string;
 } & TableProps<RecordType>;
@@ -89,11 +89,9 @@ export function DataTable<RecordType extends object = object>(
   const emptyContent: ReactNode =
     typeof mergedLocale.emptyText === "function" ? mergedLocale.emptyText() : mergedLocale.emptyText;
 
-  // 操作の列（rowActionsColumn）があれば、行を押したときにも同じ選択肢を出す
-  const rowMenu = findRowMenu<RecordType>(restTableProps.columns);
-  // 操作の列の幅は、使う側の値（values.list.actionsColumnWidth）を入れる
+  // 子リストの「開く」列は共通の幅を使う。
   const columns = useMemo(
-    () => withActionsColumnWidth(restTableProps.columns, values.list.actionsColumnWidth),
+    () => withOpenColumnWidth(restTableProps.columns, values.list.actionsColumnWidth),
     [restTableProps.columns, values.list.actionsColumnWidth],
   );
   // 横の幅の下限。スマホの幅で長い値の列が0pxに潰れたため
@@ -116,23 +114,11 @@ export function DataTable<RecordType extends object = object>(
     () => (spinLoading ? readRowCount(countKey) : undefined),
     [spinLoading, countKey],
   );
-  // どの画面も components を渡していないため、行の部品だけを指定する
-  const { onRow } = restTableProps;
-  const menuRowProps: Pick<TableProps<RecordType>, "onRow" | "components"> = rowMenu
-    ? {
-        components: { body: { row: MenuRow } },
-        onRow: (record, index) =>
-          ({ ...onRow?.(record, index), rowMenu: rowMenu(record) }) as ReturnType<
-            NonNullable<TableProps<RecordType>["onRow"]>
-          >,
-      }
-    : {};
-  // 押しても何も起きない表（行の選択肢・onRow・行の選択がない）は、マウスを載せても行の色を変えない
-  const clickable = Boolean(rowMenu || onRow || restTableProps.rowSelection);
+  // 行の操作や選択がない表では、ホバー時も行の色を保つ。
+  const clickable = Boolean(restTableProps.onRow || restTableProps.rowSelection);
   const table = (
     <Table<RecordType>
       {...restTableProps}
-      {...menuRowProps}
       columns={columns}
       scroll={scroll}
       locale={mergedLocale}

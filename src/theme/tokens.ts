@@ -6,7 +6,7 @@ import type { ThemeValues } from "./designValues";
  * 表の選んだ行の色を、明暗の計算（algorithm）と token から導く（雛形antd-adminのテーマの作りのまま）。
  * 値ではなく「選んだ行は colorFillAlter の色にする」という仕組みのため、ここに残す
  */
-export function buildTableTokens(cfg: ThemeConfig) {
+function buildTableTokens(cfg: ThemeConfig) {
   const rowSelectedBg = theme.getDesignToken(cfg).colorFillAlter;
   return {
     rowSelectedBg,
@@ -14,17 +14,18 @@ export function buildTableTokens(cfg: ThemeConfig) {
   };
 }
 
-/** 使う側が渡した明暗の一方の値から、antdの ConfigProvider に渡すテーマを作る */
-export function buildThemeConfig(values: ThemeValues, darkMode: boolean): ConfigProviderProps {
+/** 共通の設定とブランドの主色から、Ant Design のテーマを作る */
+export function buildThemeConfig(values: ThemeValues, darkMode: boolean, primaryColor?: string): ConfigProviderProps {
   const algorithm = darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm;
+  const token = primaryColor === undefined ? values.token : { ...values.token, colorPrimary: primaryColor };
   return {
     theme: {
       algorithm,
-      token: values.token,
+      token,
       components: {
         ...values.components,
         Table: {
-          ...buildTableTokens({ algorithm, token: values.token }),
+          ...buildTableTokens({ algorithm, token }),
           ...values.components.Table,
         },
       },

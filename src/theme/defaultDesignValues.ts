@@ -1,5 +1,4 @@
-// 見た目の既定の値（1組だけ）。ThemeProvider に values を渡さないとき、または渡さなかったまとまりに使う。
-// 使う側は、変えたいまとまり（theme・list など）だけを ThemeProvider の values に渡して上書きする。
+// 標準画面の共通設定。ThemeProvider が内部の部品に渡す。
 import type { DesignValues } from "./designValues";
 
 /** 文字の書体。先頭の Noto Sans JP Variable は、使う側が書体のファイル（@fontsource-variable/noto-sans-jp）を読み込んだときだけ効き、なければ後ろの書体になる */
@@ -17,10 +16,15 @@ const SHARED_TOKEN = {
   borderRadiusLG: 12,
 };
 
-/** ボタンと入力の欄の影を消す（雛形antd-adminの値） */
+/** 明暗共通の入力部品のトークン */
 const CONTROL_COMPONENTS = {
   Button: { primaryShadow: "none", defaultShadow: "none", dangerShadow: "none" },
   Input: { activeShadow: "none" },
+  Form: {
+    // ラベルの下端からフィールドの表示領域までの間隔。
+    verticalLabelPadding: "0 0 8px",
+    itemMarginBottom: 20,
+  },
 };
 
 export const defaultDesignValues: DesignValues = {
@@ -81,8 +85,6 @@ export const defaultDesignValues: DesignValues = {
     brandBoxSize: 40,
     logoSize: 24,
     groupDotSize: 6,
-    crumbMaxWidthEm: 10,
-    crumbIconOpacity: 0.88,
     userMenuLineGap: 2,
   },
   list: {
@@ -96,7 +98,13 @@ export const defaultDesignValues: DesignValues = {
     pillRadius: 9999,
     empty: { maxWidth: 360, iconBoxSize: 44, iconSize: 22, iconStrokeWidth: 1.75 },
   },
-  edit: { pageGutter: 16 },
+  panel: {
+    pageGutter: 16,
+    betweenPanels: 16,
+    headingToBody: 24,
+    betweenActions: 16,
+    relatedContent: 8,
+  },
   // 開始・終了時刻の入力欄（Col span 8、Row gutter token.margin）、複数行の文の欄で最も多い行数（2〜6）、
   // 日付（YYYY-MM-DD（dd））・月（MONTH_PICKER_FORMAT）・時刻（HH:mm）の表示書式
   field: {
@@ -116,11 +124,3 @@ export const defaultDesignValues: DesignValues = {
   // antdの既定の「*」と同じ印と間（4px）で、項目名の後ろに出す
   requiredMark: { text: "*", gapToken: "marginXXS", fontSizeToken: "fontSize" },
 };
-
-/** 既定の値に、使う側の値をまとまり（theme・list など、DesignValues の1段目）ごとに上書きする。まとまりの中は混ぜない */
-export function withDefaults(values: Partial<DesignValues> | undefined): DesignValues {
-  if (!values) return defaultDesignValues;
-  // undefined を渡したまとまりは、既定の値のままにする
-  const given = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined));
-  return { ...defaultDesignValues, ...given };
-}

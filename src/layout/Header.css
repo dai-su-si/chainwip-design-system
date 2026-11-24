@@ -1,0 +1,18 @@
+.chainwip-breadcrumb {
+  min-width: 0;
+}
+
+.chainwip-breadcrumb ol {
+  flex-wrap: nowrap;
+}
+
+.chainwip-breadcrumb li:not(.ant-breadcrumb-separator) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chainwip-breadcrumb .ant-breadcrumb-separator {
+  flex-shrink: 0;
+}

@@ -1,6 +1,4 @@
 // サイドメニューの項目の形と、パスの扱い。メニューの中身（どの項目を出すか）は使う側が渡す。
-import type { LucideIcon } from "lucide-react";
-
 type BaseMenuNode = {
   id: string;
   name: string;
@@ -25,7 +23,7 @@ export type MenuItem =
     });
 
 /** パンくずの1つの項目。to があればリンクにする（戻り先）。今いる画面は to を持たない */
-export type Crumb = { label: string; to?: string; icon?: LucideIcon };
+export type Crumb = { label: string; to?: string };
 
 /** Normalized pathname (no trailing slash except `/`) */
 export function normalizeAppPath(pathname: string): string {

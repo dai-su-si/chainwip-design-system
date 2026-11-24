@@ -3,7 +3,7 @@ body {
   margin: 0;
 }
 
-/* スクロールバー。値（太さ・縁・角の丸み・色）は、ThemeProvider が使う側の values から html にCSS変数で置く */
+/* スクロールバーの共通設定は ThemeProvider が CSS 変数として適用する。 */
 
 /* Firefox */
 * {
@@ -35,6 +35,12 @@ body {
 
 *::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ラベル付きの縦型項目は内容の高さを使い、次の項目との余白は Form のトークンだけで決める。 */
+.ant-form-item-vertical > .ant-form-item-row:has(> .ant-form-item-label) > .ant-form-item-control > .ant-form-item-control-input {
+  align-items: flex-start;
+  min-height: 0;
 }
 
 /* パネル（HeadedCard）の中身の最後の欄は、下の余白（Form.Item の既定）を持たず、パネルの下の余白だけにする。

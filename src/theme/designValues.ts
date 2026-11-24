@@ -1,5 +1,4 @@
-// 見た目の値の型と、部品がそれを読む口。既定の値は defaultDesignValues.ts に1組だけ置き、
-// 使う側は ThemeProvider の values に変えたいまとまりだけを渡して上書きする。
+// 共通の表示設定の型と、内部の部品が設定を読むためのコンテキスト。
 import { createContext, useContext } from "react";
 import type { GlobalToken, ThemeConfig } from "antd";
 
@@ -53,10 +52,6 @@ export type DesignValues = {
     logoSize: number;
     /** 畳んだときのメニューのまとまりの印（丸）の大きさ（px） */
     groupDotSize: number;
-    /** 狭い画面のパンくずの、今いる画面の名前の幅の上限（文字の大きさの何倍か） */
-    crumbMaxWidthEm: number;
-    /** パンくずのアイコンの不透明度 */
-    crumbIconOpacity: number;
     /** 利用者の欄の名前とメールの間（px） */
     userMenuLineGap: number;
   };
@@ -91,9 +86,17 @@ export type DesignValues = {
     };
   };
   /** 編集の枠 */
-  edit: {
-    /** 普通の画面（EditPage）の段と列の間（px） */
+  panel: {
+    /** パネル構成型の段と列の間（px） */
     pageGutter: number;
+    /** パネル同士の間隔（px） */
+    betweenPanels: number;
+    /** パネル見出しと本文の間隔（px） */
+    headingToBody: number;
+    /** 各種操作パネルで操作の組同士を分ける間隔（px） */
+    betweenActions: number;
+    /** 操作や入力部品とその補足の間隔（px） */
+    relatedContent: number;
   };
   /** 原子の欄（src/fields/ の TextField・RangeField など） */
   field: {
@@ -135,7 +138,7 @@ export type DesignValues = {
 
 export const DesignValuesContext = createContext<DesignValues | null>(null);
 
-/** 見た目の値（既定の値に、ThemeProvider に渡した値を重ねたもの）を読む。ThemeProvider の外で呼んだら止める（antdの App も外にあるため） */
+/** ThemeProvider が設定した共通の表示設定を読む。 */
 export function useDesignValues(): DesignValues {
   const values = useContext(DesignValuesContext);
   if (!values) throw new Error("useDesignValues: ThemeProvider の中で使ってください");

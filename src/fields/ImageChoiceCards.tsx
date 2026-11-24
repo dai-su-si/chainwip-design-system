@@ -2,7 +2,7 @@
 import { Card, Flex, Image, Typography, theme } from "antd";
 import { Check, Plus, ZoomIn } from "lucide-react";
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useDesignValues } from "../theme/designValues";
 
 const { Text, Paragraph } = Typography;
@@ -23,6 +23,8 @@ export type ImageChoiceCardsProps<V extends string = string> = {
   onChange?: (value: V) => void;
   /** Form.Item が渡す id（欄の名前と結び付ける） */
   id?: string;
+  /** 操作に必要な補足。選択肢の下に表示する */
+  hint?: string;
   /** 説明の最大の行数。既定は values.imageChoiceCards.descriptionRows */
   descriptionRows?: number;
 };
@@ -32,10 +34,12 @@ export function ImageChoiceCards<V extends string = string>({
   value,
   onChange,
   id,
+  hint,
   descriptionRows: givenRows,
 }: ImageChoiceCardsProps<V>) {
   const { token } = theme.useToken();
-  const values = useDesignValues().imageChoiceCards;
+  const { imageChoiceCards: values, panel } = useDesignValues();
+  const hintId = useId();
   const descriptionRows = givenRows ?? values.descriptionRows;
   const refs = useRef<(HTMLDivElement | null)[]>([]);
   const [focusVisible, setFocusVisible] = useState<number | null>(null);
@@ -79,10 +83,11 @@ export function ImageChoiceCards<V extends string = string>({
   };
   const pageHeight = values.imageHeight - token.paddingXS * 2;
 
-  return (
+  const choices = (
     <div
       id={id}
       role="radiogroup"
+      aria-describedby={hint ? hintId : undefined}
       style={{
         display: "grid",
         gridTemplateColumns: `repeat(auto-fill, minmax(${values.minCardWidth}px, 1fr))`,
@@ -215,4 +220,10 @@ export function ImageChoiceCards<V extends string = string>({
       })}
     </div>
   );
+  return hint ? (
+    <Flex vertical gap={panel.relatedContent}>
+      {choices}
+      <Text id={hintId} type="secondary">{hint}</Text>
+    </Flex>
+  ) : choices;
 }

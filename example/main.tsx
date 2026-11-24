@@ -6,8 +6,10 @@ import "dayjs/locale/ja";
 import "@fontsource-variable/noto-sans-jp";
 import { ThemeProvider } from "chainwip-design-system";
 import { ExampleApp } from "./App";
+import { normalizeDemoLocation } from "./navigation";
 
 dayjs.locale("ja");
+normalizeDemoLocation();
 
 function Root() {
   // 明暗の値の保存は使う側が持つ（例では画面の中だけ）
