@@ -6,5 +6,5 @@
     "paths": { "chainwip-design-system": ["../src/index.ts"] },
     "noEmit": true
   },
-  "include": ["./main.tsx", "./App.tsx", "./books.ts", "./FieldsPage.tsx", "../src"]
+  "include": ["./main.tsx", "./App.tsx", "./books.ts", "./FieldsPage.tsx", "./fixtures/**/*.tsx", "../src"]
 }

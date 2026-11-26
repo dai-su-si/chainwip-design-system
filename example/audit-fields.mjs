@@ -1,5 +1,99 @@
 import assert from "node:assert/strict";
 
+async function assertRangeLayout(row, lineNumbers, minimumWidth) {
+  const layout = await row.evaluate((element) => {
+    const rowBox = element.getBoundingClientRect();
+    const columns = [...element.children].map((child) => {
+      const { width, left, right } = child.getBoundingClientRect();
+      return { width, left: left - rowBox.left, right: right - rowBox.left };
+    });
+    return { width: rowBox.width, columns };
+  });
+  let line = 0;
+  const lines = layout.columns.map(({ left }, index) => {
+    if (index > 0 && left < layout.columns[index - 1].right) line += 1;
+    return line;
+  });
+  assert.deepEqual(lines, lineNumbers, "開始・終了・操作を順に折り返す");
+  for (const column of layout.columns) {
+    assert.ok(column.width >= Math.min(minimumWidth, layout.width) - 1, "読める欄の幅を確保する");
+    assert.ok(column.left >= 0 && column.right <= layout.width + 1, "各欄を行の横幅に収める");
+  }
+  if (line === 0) {
+    const expected = (layout.width - 32) / 3;
+    assert.ok(layout.columns.every(({ width }) => Math.abs(width - expected) <= 1), "広幅では従来どおり3等分する");
+  }
+}
+
+async function assertInputFits(input) {
+  const spans = await input.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const text = element.value || element.placeholder;
+    const context = document.createElement("canvas").getContext("2d");
+    context.font = `${style.fontSize} ${style.fontFamily}`;
+    const availableWidth = element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    return { text, textWidth: context.measureText(text).width, availableWidth };
+  });
+  assert.ok(spans.textWidth <= spans.availableWidth + 1, `「${spans.text}」が入力欄に収まる`);
+}
+
+async function auditRanges(page, main) {
+  await page.evaluate(() => document.fonts.ready);
+  const viewport = page.viewportSize();
+  const monthStart = main.getByRole("textbox", { name: /^開始月(?: \*)?$/ });
+  const monthEnd = main.getByRole("textbox", { name: "終了月", exact: true });
+  const opens = main.getByRole("textbox", { name: "開館", exact: true });
+  const closes = main.getByRole("textbox", { name: "閉館", exact: true });
+  const loan = main.getByRole("checkbox", { name: "貸出中", exact: true });
+  const rangeRow = (input) => input.locator("xpath=ancestor::*[@data-range-row][1]");
+  const add = main.getByRole("button", { name: "追加", exact: true });
+  const listStart = main.getByRole("textbox", { name: "休館の開始", exact: true });
+  const listEnd = main.getByRole("textbox", { name: "休館の終了", exact: true });
+  const lines = viewport.width === 390 ? [0, 0, 1] : [0, 0, 0];
+
+  await assertRangeLayout(rangeRow(monthStart), lines, 136);
+  for (const input of [monthStart, monthEnd, opens, closes]) await assertInputFits(input);
+  assert.equal(await monthEnd.isDisabled(), true);
+  await loan.uncheck();
+  assert.equal(await monthEnd.isEnabled(), true);
+  await loan.check();
+  assert.equal(await monthEnd.isDisabled(), true);
+
+  await monthStart.click();
+  const months = page.locator(".ant-picker-dropdown:visible .ant-picker-month-panel");
+  await months.locator(".ant-picker-cell-in-view:not(.ant-picker-cell-disabled)").last().click();
+  assert.match(await monthStart.inputValue(), /^\d{4}年12月$/);
+  await assertInputFits(monthStart);
+
+  await add.click();
+  const listRow = rangeRow(listStart.first());
+  await assertRangeLayout(listRow, lines, 136);
+  for (const input of [listStart.first(), listEnd.first()]) await assertInputFits(input);
+  await listStart.first().fill("08:00");
+  await listStart.first().press("Tab");
+  assert.equal(await listStart.first().inputValue(), "08:00");
+
+  if (viewport.width === 390) {
+    await page.setViewportSize({ ...viewport, width: 320 });
+    try {
+      await assertRangeLayout(rangeRow(monthStart), [0, 1, 2], 136);
+      await assertRangeLayout(listRow, [0, 1, 2], 136);
+      assert.equal(await listStart.first().inputValue(), "08:00", "折り返しても入力値を保持する");
+    } finally {
+      await page.setViewportSize(viewport);
+    }
+  }
+
+  await add.click();
+  await listStart.last().fill("13:15");
+  await listStart.last().press("Tab");
+  await listRow.getByRole("button", { name: "削除", exact: true }).click();
+  assert.equal(await listStart.count(), 1);
+  assert.equal(await listStart.inputValue(), "13:15", "対象行だけを削除する");
+  await rangeRow(listStart).getByRole("button", { name: "削除", exact: true }).click();
+  assert.equal(await listStart.count(), 0);
+}
+
 export async function auditFields(page, reportFinding) {
   const main = page.getByRole("main");
   const basicInfo = main.getByRole("heading", { name: "基本情報", exact: true })
@@ -66,9 +160,7 @@ export async function auditFields(page, reportFinding) {
   assert.equal(await title.inputValue(), "", "別のパネルの保存は基本情報の入力を変えない");
   await title.fill("星の見つけ方");
 
-  await main.getByRole("textbox", { name: /^開始月(?: \*)?$/ }).click();
-  const months = page.locator(".ant-picker-dropdown:visible .ant-picker-month-panel");
-  await months.locator(".ant-picker-cell-in-view:not(.ant-picker-cell-disabled)").first().click();
+  await auditRanges(page, main);
   await save.click();
   await page.getByText("基本情報を保存しました", { exact: true }).waitFor();
 

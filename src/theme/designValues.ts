@@ -85,6 +85,11 @@ export type DesignValues = {
       iconStrokeWidth: number;
     };
   };
+  /** パネル構成型の画面に共通する列幅（利用側の余白設定とは別） */
+  panelLayout: {
+    /** 広い画面でパネルの本文に確保する幅の下限（px） */
+    preferredMinWidth: number;
+  };
   /** 編集の枠 */
   panel: {
     /** パネル構成型の段と列の間（px） */
@@ -105,8 +110,8 @@ export type DesignValues = {
   };
   /** 原子の欄（src/fields/ の TextField・RangeField など） */
   field: {
-    /** 開始と終了の組の1つの欄の幅（antdの24の段のうちの段の数）。8で幅1/3。3つ目の場所（組に付く操作）も同じ幅 */
-    pairColumnSpan: number;
+    /** 開始・終了・組に付く操作の幅の下限（px）。日付欄は曜日を含む値のために幅を取る */
+    pairMinWidth: { default: number; date: number };
     /** 開始と終了の組の欄の間（antdの token の名前） */
     pairGapToken: NumericTokenName;
     /** 複数行の文の欄の既定の行数（最小と最大。間は文の長さで伸び縮みする） */
@@ -142,6 +147,9 @@ export type DesignValues = {
 };
 
 export const DesignValuesContext = createContext<DesignValues | null>(null);
+
+export type PanelSaveButtonType = "primary" | "default";
+export const PanelSaveButtonTypeContext = createContext<PanelSaveButtonType | undefined>(undefined);
 
 /** ThemeProvider が設定した共通の表示設定を読む。 */
 export function useDesignValues(): DesignValues {

@@ -44,7 +44,7 @@ export type ControlKind = "text" | "number" | "date" | "month" | "time";
 export type PickerOptions = {
   /** false で、欄を空にする「×」を出さない（空にできない値のポカヨケ）。既定は antd のまま（出す） */
   allowClear?: boolean;
-  /** 値が変わったときに呼ぶ（例: 月を変えたら、その月の日の選択を空にする）。フォームへの値の反映は欄が行う */
+  /** 値が変わったときに呼ぶ。フォームへの値の反映は欄が行う */
   onChange?: (value: Dayjs | null) => void;
 };
 
@@ -96,22 +96,12 @@ export function controlElement(
     case "number":
       return <InputNumber {...shared} min={spec.min} max={spec.max} style={FULL_WIDTH} />;
     case "date":
-      return (
-        <DatePicker
-          {...shared}
-          format={values.formats.date}
-          disabledDate={spec.disabledDate}
-          allowClear={spec.allowClear}
-          onChange={spec.onChange}
-          style={FULL_WIDTH}
-        />
-      );
     case "month":
       return (
         <DatePicker
           {...shared}
-          picker="month"
-          format={values.formats.month}
+          picker={spec.kind === "month" ? "month" : undefined}
+          format={values.formats[spec.kind]}
           disabledDate={spec.disabledDate}
           allowClear={spec.allowClear}
           onChange={spec.onChange}

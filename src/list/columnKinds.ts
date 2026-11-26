@@ -10,6 +10,7 @@ import { useDesignValues } from "../theme/designValues";
  * 操作の列を出す画面の幅。スマホの幅（768px未満、antdの md より狭い）では隠し、行を押す操作だけにする。
  */
 export const ACTIONS_COLUMN_PRIORITY: { responsive: Breakpoint[] } = { responsive: ["md"] };
+export const MANAGED_ROW_ACTIONS_KEY = "__chainwip_row_actions";
 
 /**
  * 列の種類ごとの、antdの列に足す設定。

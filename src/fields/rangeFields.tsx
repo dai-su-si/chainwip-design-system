@@ -1,6 +1,5 @@
 // 原子の欄のうち、開始と終了の組（RangeField）と、組のリスト（RangeListField）。
-// どちらも、横に2つの欄（それぞれ幅 values.field.pairColumnSpan）を並べ、3つ目の場所に組に付く操作を置く。
-import { Button, Checkbox, Col, Flex, Form, Row, theme } from "antd";
+import { Button, Checkbox, Flex, Form, theme } from "antd";
 import type { FormRule } from "antd";
 import type { NamePath, Store } from "antd/es/form/interface";
 import type { ReactNode } from "react";
@@ -76,49 +75,73 @@ function listSideSpec<Values>(p: RangeListFieldProps<Values>, which: "start" | "
 /** 組全体の説明の文を出すとき、組の中の欄の下の余白をなくし、説明の文を入力の部品のすぐ下に出す（1つの欄の extra と同じ間） */
 const NO_MARGIN = { marginBottom: 0 } as const;
 
-/** 欄の名前のない場所を、名前のある欄と同じ高さにそろえるための、読み上げない空の名前 */
-const BLANK_LABEL = <span aria-hidden>{" "}</span>;
+/** 開始・終了・操作は同じ幅で並べ、幅の下限を保てなければ順に折り返す */
+function RangeRowLayout({
+  kind,
+  start,
+  end,
+  action,
+  hasItemGap = false,
+  alignActionAtEnd = false,
+}: {
+  kind: ControlKind;
+  start: ReactNode;
+  end: ReactNode;
+  action?: ReactNode;
+  hasItemGap?: boolean;
+  alignActionAtEnd?: boolean;
+}) {
+  const { token } = theme.useToken();
+  const { pairGapToken, pairMinWidth } = useDesignValues().field;
+  const gap = token[pairGapToken];
+  const minWidth = kind === "date" ? pairMinWidth.date : pairMinWidth.default;
+  const width = `max(min(100%, ${minWidth}px), calc((100% - ${gap * 2}px) / 3))`;
+  const column = { flex: `0 0 ${width}`, minWidth: 0 };
+  return (
+    <Flex wrap data-range-row style={{ columnGap: gap, rowGap: hasItemGap ? 0 : gap }}>
+      <div style={column}>{start}</div>
+      <div style={column}>{end}</div>
+      {action && <div style={{ ...column, alignSelf: alignActionAtEnd ? "end" : undefined }}>{action}</div>}
+    </Flex>
+  );
+}
 
 /**
- * 開始と終了の組の欄。横に2つ（それぞれ幅1/3）並べ、3つ目の場所にチェックを置ける。
+ * 開始と終了の組の欄。開始・終了・チェックの順で、幅に収まる範囲で横に並べる。
  * 終了で開始より前を選べなくするときは、end の disabledTime・disabledDate・min に渡す（ポカヨケ）
  */
 export function RangeField<Values = Store>(props: RangeFieldProps<Values>) {
-  const { token } = theme.useToken();
   const values = useDesignValues().field;
   const { check, groupExtra } = props;
-  const span = values.pairColumnSpan;
   const hasGroupExtra = groupExtra !== undefined && groupExtra !== null;
   const innerStyle = hasGroupExtra ? NO_MARGIN : undefined;
   const side = (which: "start" | "end", disabled: boolean) => (
-    <Col span={span}>
-      <Form.Item<Values> {...itemProps(props[which])} style={innerStyle}>
-        {controlElement(
-          sideSpec(props, which),
-          { placeholder: props[which].placeholder, disabled: props[which].disabled || disabled },
-          values,
-        )}
-      </Form.Item>
-    </Col>
+    <Form.Item<Values> {...itemProps(props[which])} style={innerStyle}>
+      {controlElement(
+        sideSpec(props, which),
+        { placeholder: props[which].placeholder, disabled: props[which].disabled || disabled },
+        values,
+      )}
+    </Form.Item>
   );
   const row = (endDisabled: boolean) => (
-    <Row gutter={token[values.pairGapToken]}>
-      {side("start", false)}
-      {side("end", endDisabled)}
-      {check ? (
-        <Col span={span}>
-          <Form.Item<Values>
-            name={check.name}
-            label={BLANK_LABEL}
-            valuePropName="checked"
-            rules={check.rules}
-            style={innerStyle}
-          >
-            <Checkbox>{check.text}</Checkbox>
-          </Form.Item>
-        </Col>
-      ) : null}
-    </Row>
+    <RangeRowLayout
+      kind={props.kind}
+      start={side("start", false)}
+      end={side("end", endDisabled)}
+      hasItemGap={!hasGroupExtra}
+      alignActionAtEnd
+      action={check && (
+        <Form.Item<Values>
+          name={check.name}
+          valuePropName="checked"
+          rules={check.rules}
+          style={innerStyle}
+        >
+          <Checkbox>{check.text}</Checkbox>
+        </Form.Item>
+      )}
+    />
   );
   // 組全体の説明の文は、組を包む名前のない Form.Item の extra に出す（欄の下の説明と同じ色・大きさ・間）
   const withGroupExtra = (endDisabled: boolean) =>
@@ -163,14 +186,12 @@ export type RangeListFieldProps<Values = Store> = {
 }[ControlKind];
 
 /**
- * 開始と終了の組のリストの欄（Form.List）。各行は RangeField と同じ並びで、3つ目の場所に「削除」、下に「追加」を置く。0行も持てる。
+ * 開始と終了の組のリストの欄（Form.List）。各行は RangeField と同じ並びで、終了の後に「削除」、下に「追加」を置く。0行も持てる。
  * 行の誤りの文は行の下に出し、文の幅で「削除」の位置を動かさない（行の欄は noStyle にし、誤りは行の Form.Item に出す）
  */
 export function RangeListField<Values = Store>(props: RangeListFieldProps<Values>) {
-  const { token } = theme.useToken();
   const values = useDesignValues().field;
   const { name, label, extra } = props;
-  const span = values.pairColumnSpan;
   return (
     <Form.Item label={label} extra={extra}>
       <Form.List name={name}>
@@ -179,7 +200,6 @@ export function RangeListField<Values = Store>(props: RangeListFieldProps<Values
           const cell = (row: number, key: "start" | "end") => {
             const s = props[key];
             return (
-            <Col span={span}>
               <Form.Item
                 noStyle
                 name={[row, key]}
@@ -192,20 +212,18 @@ export function RangeListField<Values = Store>(props: RangeListFieldProps<Values
                   values,
                 )}
               </Form.Item>
-            </Col>
             );
           };
           return (
             <>
               {rows.map((r) => (
                 <Form.Item key={r.key}>
-                  <Row gutter={token[values.pairGapToken]}>
-                    {cell(r.name, "start")}
-                    {cell(r.name, "end")}
-                    <Col span={span}>
-                      <Button onClick={() => remove(r.name)}>削除</Button>
-                    </Col>
-                  </Row>
+                  <RangeRowLayout
+                    kind={props.kind}
+                    start={cell(r.name, "start")}
+                    end={cell(r.name, "end")}
+                    action={<Button onClick={() => remove(r.name)}>削除</Button>}
+                  />
                 </Form.Item>
               ))}
               <Flex>

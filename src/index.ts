@@ -45,6 +45,8 @@ export type { AddButtonProps } from "./list/AddButton";
 // パネル構成型の画面枠とパネル
 export { PanelPage } from "./edit/PanelPage";
 export type { PanelPageProps } from "./edit/PanelPage";
+export { PanelGroup } from "./edit/PanelGroup";
+export type { PanelGroupProps } from "./edit/PanelGroup";
 export { HeadedCard } from "./edit/HeadedCard";
 export type { HeadedCardProps } from "./edit/HeadedCard";
 export { ActionPanel } from "./edit/ActionPanel";

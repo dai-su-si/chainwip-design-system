@@ -68,7 +68,7 @@ export function notifyLifecycle<TValues, TData = void>(
       if (fallback === null) message.destroy(key);
       else {
         const duration = texts.errorDuration;
-        message.error({ content: errorText(e, fallback), key, ...(duration ? { duration } : {}) });
+        message.error({ content: errorText(e, fallback), key, ...(duration !== undefined ? { duration } : {}) });
       }
     },
   };

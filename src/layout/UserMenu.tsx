@@ -1,7 +1,5 @@
 // サイドバーの下の利用者の欄。押すと、利用者の基本情報の画面へ移る。移る処理（onOpen）と欄の名前（label）は使う側が渡す。
-// 丸いアイコンとドロップダウンのメニューを消し、ログアウトは基本情報の画面の「アカウント操作」へ移した
-// クリック可能であることを示すために、ボタンの存在は必要です。」）。ボタンの押下は欄の onClick へ伝わり、メニューは出さない。
-// 畳んだとき（細い幅）は名前とメールが入らないため、メニューの項目と同じ人のアイコン（lucideのUser）だけを出す（AIの判断）
+// 畳んだときは名前とメールの代わりに人のアイコンを表示する。
 import { Button, Flex, Tooltip, Typography, theme } from "antd";
 import { MoreVertical, User as UserIcon } from "lucide-react";
 import { useDesignValues } from "../theme/designValues";

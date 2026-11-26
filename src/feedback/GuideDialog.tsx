@@ -36,7 +36,7 @@ export function GuideContent({ lead, image, steps = [] }: Pick<Guide, "lead" | "
       {steps.length > 0 && (
         <Flex vertical gap={token.marginXXS}>
           {steps.map((step, i) => (
-            <Typography.Text key={step}>
+            <Typography.Text key={STEP_MARKS[i]}>
               {STEP_MARKS[i]} {step}
             </Typography.Text>
           ))}

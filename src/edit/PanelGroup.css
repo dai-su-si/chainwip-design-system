@@ -1,0 +1,8 @@
+[data-panel-group-item] {
+  min-width: 0;
+}
+
+[data-panel-group-item] > [data-headed-card] {
+  box-sizing: border-box;
+  height: 100%;
+}

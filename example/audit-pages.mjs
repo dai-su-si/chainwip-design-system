@@ -29,7 +29,7 @@ async function auditActionPlacement(main, type, width) {
     const column = await content.locator("[data-panel-column]").boundingBox();
     const ratio = column?.width / await main.evaluate((element) => element.clientWidth);
     assert.ok(width >= 1200 ? ratio < 0.8 : ratio < 1 && ratio > 0.8, "パネル構成型は所定の列幅を使う");
-    const panels = content.locator("[data-panel-column] > .ant-card, [data-panel-column] > form > .ant-card");
+    const panels = content.locator("[data-panel-column] > .ant-card, [data-panel-column] > form > .ant-card, [data-panel-group-item] > .ant-card");
     assert.ok(await panels.count(), "パネル構成型にはパネルを置く");
     for (const panel of await panels.all()) {
       const heading = panel.getByRole("heading", { level: 2 }).and(panel.locator("[data-panel-title]"));
@@ -115,10 +115,17 @@ async function auditManagedList(page, main) {
     ["B2", "B5"],
     "条件を選んだ後に、表示する行が絞り込まれる",
   );
+  const actions = list.locator("[data-page-actions]");
+  assert.equal(await actions.getByRole("button").count(), 1, "通常時の一覧右上は追加だけ");
+  assert.match(await actions.getByRole("button", { name: "追加", exact: true }).getAttribute("class"), /ant-btn-primary/);
   await page.reload();
   await list.getByRole("cell", { name: "B1", exact: true }).waitFor();
   await page.goto(new URL("/managed-books?state=error", base).href);
-  await list.locator("[data-page-actions]").getByRole("button", { name: "再試行", exact: true }).click();
+  const retry = actions.getByRole("button", { name: "再試行", exact: true });
+  await retry.waitFor();
+  assert.equal(await actions.getByRole("button").count(), 2, "取得失敗時の一覧右上は再試行と追加だけ");
+  await actions.getByRole("button", { name: "追加", exact: true }).waitFor();
+  await retry.click();
   await list.getByText("一覧を読み込めませんでした", { exact: true }).waitFor({ state: "hidden" });
   await list.getByRole("cell", { name: "B1", exact: true }).waitFor();
   assert.equal(page.url(), new URL("/managed-books", base).href);
@@ -129,6 +136,57 @@ async function auditManagedList(page, main) {
   await list.getByText("一覧を読み込めませんでした", { exact: true }).waitFor();
   await page.goForward();
   await list.getByRole("cell", { name: "B1", exact: true }).waitFor();
+}
+
+async function auditTableWidths(page, width) {
+  await page.goto(new URL("/fixtures/table-width.html", base).href);
+  const fixture = page.locator("[data-table-width-fixture]");
+  const table = fixture.getByRole("table");
+  await table.getByRole("cell", { name: "Oracle Database", exact: true }).waitFor();
+  await page.evaluate(() => document.fonts.ready);
+  const duration = table.getByRole("columnheader", { name: "期間", exact: true });
+  assert.equal((await duration.boundingBox()).width, 144, "短い値の列は共通の幅になる");
+  await fixture.screenshot({ path: fileURLToPath(new URL(`issue11-table-${width}.png`, output)) });
+
+  await fixture.evaluate((element) => { element.style.width = "320px"; });
+  assert.equal((await duration.boundingBox()).width, 144, "表の利用幅が増えても短い列の幅は変わらない");
+
+  await fixture.evaluate((element) => { element.style.width = "200px"; });
+  assert.equal((await duration.boundingBox()).width, 144, "表の利用幅が狭くても短い列の幅は変わらない");
+  const scroll = fixture.locator(".ant-table-content");
+  assert.ok(await scroll.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+    return element.scrollLeft > 0;
+  }), "列が収まらない場合は表の中で横スクロールできる");
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "表の外は横スクロールしない");
+  await fixture.screenshot({ path: fileURLToPath(new URL(`issue11-table-scroll-${width}.png`, output)) });
+}
+
+async function auditUniformSave(page, width) {
+  await page.goto(new URL("/fields?save=default", base).href);
+  const saves = page.getByRole("main").getByRole("button", { name: "保存", exact: true });
+  assert.equal(await saves.count(), 3);
+  for (const save of await saves.all()) assert.match(await save.getAttribute("class"), /ant-btn-default/);
+  await saves.first().click();
+  await page.getByText("基本情報を保存しました", { exact: true }).waitFor();
+  await page.screenshot({ path: fileURLToPath(new URL(`panel-save-default-${width}.png`, output)) });
+}
+
+async function auditPanelWidthContinuity(browser) {
+  const page = await browser.newPage({ viewport: { width: 1199, height: 844 } });
+  try {
+    await page.goto(new URL("/fields", base).href);
+    const column = page.locator("[data-panel-column]");
+    await column.waitFor();
+    const previous = await column.boundingBox();
+    await page.setViewportSize({ width: 1200, height: 844 });
+    const next = await column.boundingBox();
+    assert.ok(next.width >= previous.width && next.width <= previous.width + 1,
+      `画面幅1199pxから1200pxで本文の幅が不連続になる (${previous.width} → ${next.width}px)`);
+    await page.screenshot({ path: fileURLToPath(new URL("fields-panel-width-1200.png", output)), animations: "disabled" });
+  } finally {
+    await page.close();
+  }
 }
 
 async function auditListLoading(page, width) {
@@ -296,7 +354,7 @@ const pages = [
           before: index === 0 ? null : item.getBoundingClientRect().top - items[index - 1].getBoundingClientRect().bottom,
         };
       }));
-      assert.equal(actionGaps.length, 3);
+      assert.equal(actionGaps.length, 4);
       for (const { within, before } of actionGaps) {
         assert.ok(Math.abs(within - 8) <= 1 && (before === null || Math.abs(before - 16) <= 1), "操作の補足はそのボタンに所属する");
       }
@@ -305,10 +363,21 @@ const pages = [
         group.nextElementSibling?.id === group.getAttribute("aria-describedby")
         && Math.abs(group.nextElementSibling.getBoundingClientRect().top - group.getBoundingClientRect().bottom - 8) <= 1
       )), "貸出票の補足は選択部品の直後に置く");
-      const [download] = await Promise.all([
-        page.waitForEvent("download"),
-        main.getByRole("button", { name: "書き出し", exact: true }).click(),
-      ]);
+      const actionPanel = panelWithTitle(main, "操作");
+      const exportButton = actionPanel.getByRole("button", { name: "書き出し", exact: true });
+      const helpButton = actionPanel.getByRole("button", { name: "使い方", exact: true });
+      assert.equal(await actionPanel.locator("button.ant-btn-primary").count(), 1);
+      const downloadPending = page.waitForEvent("download");
+      await exportButton.click();
+      await actionPanel.locator('button[aria-busy="true"]').waitFor();
+      assert.equal(await helpButton.getAttribute("aria-busy"), null);
+      let downloadCount = 0;
+      const countDownload = () => { downloadCount += 1; };
+      page.on("download", countDownload);
+      await exportButton.evaluate((button) => button.click());
+      const download = await downloadPending;
+      page.off("download", countDownload);
+      assert.equal(downloadCount, 1);
       assert.equal(download.suggestedFilename(), "図書一覧.csv");
       const exportDialog = page.getByRole("dialog", { name: "書き出し" });
       await exportDialog.getByText(/件の図書を書き出しました/).waitFor();
@@ -323,6 +392,16 @@ const pages = [
       const recent = panelWithTitle(main, "最近見た図書");
       const loans = panelWithTitle(main, "貸出中の図書");
       const reservations = panelWithTitle(main, "予約した図書");
+      const group = main.locator("[data-panel-group]");
+      const [firstBox, secondBox] = await Promise.all([recent.boundingBox(), loans.boundingBox()]);
+      if (page.viewportSize().width >= 768) {
+        assert.equal(firstBox.y, secondBox.y);
+        assert.equal(firstBox.height, secondBox.height);
+      } else {
+        assert.ok(secondBox.y > firstBox.y + firstBox.height);
+        assert.notEqual(firstBox.height, secondBox.height);
+      }
+      await group.screenshot({ path: fileURLToPath(new URL(`panel-group-${page.viewportSize().width}.png`, output)) });
       for (const panel of [recent, loans, reservations]) {
         const table = panel.getByRole("table");
         await table.getByRole("columnheader", { name: "書名", exact: true }).waitFor();
@@ -332,6 +411,15 @@ const pages = [
       await recent.getByRole("cell", { name: "はじめての園芸", exact: true }).click();
       await main.locator('[data-screen-type="list"]').waitFor();
       await openMenu(page, "この例について");
+      const clearHistory = main.getByRole("button", { name: "閲覧履歴を消去", exact: true });
+      assert.match(await clearHistory.getAttribute("class"), /ant-btn-dangerous/);
+      await clearHistory.click();
+      const clearDialog = page.getByRole("dialog").filter({ hasText: "閲覧履歴を消去しますか？" });
+      await clearDialog.getByRole("button", { name: "キャンセル", exact: true }).click();
+      await recent.getByRole("cell", { name: "はじめての園芸", exact: true }).waitFor();
+      await clearHistory.click();
+      await clearDialog.getByRole("button", { name: "消去", exact: true }).click();
+      await recent.getByText("最近見た図書はありません。", { exact: true }).waitFor();
       const openLoan = loans.getByRole("button", { name: "図書一覧を開く（星の見つけ方）", exact: true });
       await openLoan.focus();
       await page.keyboard.press("Enter");
@@ -345,6 +433,7 @@ const pages = [
     label: "入力の例",
     type: "panels",
     async check(page, main, reportFinding) {
+      assert.equal(await main.locator("[data-panel-actions] button.ant-btn-primary").count(), 3);
       await auditFields(page, reportFinding);
     },
   },
@@ -370,6 +459,8 @@ try {
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "ページが横にはみ出す");
         if (screen.id === "fields") {
           await auditLayoutTokens(page, width);
+          await auditUniformSave(page, width);
+          await auditTableWidths(page, width);
           await page.goto(new URL(screen.route, base).href);
           await assertRoute(page, screen.route, screen.label);
         }
@@ -389,6 +480,21 @@ try {
       for (const failure of failures) console.error(`  ${failure.id} ${failure.message}`);
     }
   }
+  await auditPanelWidthContinuity(browser);
+  const widePage = await browser.newPage({ viewport: { width: 1680, height: 900 } });
+  await widePage.goto(new URL("/about", base).href);
+  const group = widePage.locator("[data-panel-group]");
+  await group.waitFor();
+  const positions = await group.locator("[data-headed-card]").evaluateAll((cards) =>
+    cards.map((card) => {
+      const { top, left, height } = card.getBoundingClientRect();
+      return { top, left, height };
+    }),
+  );
+  assert.equal(positions.length, 3);
+  assert.ok(positions.every(({ top, height }) => top === positions[0].top && height === positions[0].height));
+  assert.equal(new Set(positions.map(({ left }) => left)).size, 3);
+  await group.screenshot({ path: fileURLToPath(new URL("panel-group-1680.png", output)) });
 } finally {
   await browser.close();
 }

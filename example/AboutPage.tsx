@@ -5,11 +5,13 @@ import {
   DataTable,
   HeadedCard,
   ImageChoiceCards,
+  PanelGroup,
   PanelPage,
   ProgressModal,
   atLeastMin,
   rowOpenColumn,
   useColumnKinds,
+  useConfirmDanger,
   useGuideDialog,
   useNotice,
 } from "chainwip-design-system";
@@ -73,6 +75,8 @@ function BookListPanel({ title, books, empty, onOpenBooks }: {
 
 export function AboutPage({ onOpenBooks }: { onOpenBooks: () => void }) {
   const notice = useNotice();
+  const confirmDanger = useConfirmDanger();
+  const [recentBooks, setRecentBooks] = useState(() => INITIAL_BOOKS.slice(0, 3));
   const [progressOpen, setProgressOpen] = useState(false);
   const [progresses, setProgresses] = useState<ProgressItem[]>([]);
   const [slip, setSlip] = useState("simple");
@@ -115,19 +119,40 @@ export function AboutPage({ onOpenBooks }: { onOpenBooks: () => void }) {
       </HeadedCard>
       <ActionPanel
         title="操作"
+        primaryActionKey="export"
         items={[
-          { key: "export", description: "サンプル図書をCSVで書き出します。", label: "書き出し", onClick: exportBooks },
+          {
+            key: "export",
+            description: "サンプル図書をCSVで書き出します。",
+            label: "書き出し",
+            onClick: exportBooks,
+            loading: progresses.some((item) => item.status === "running"),
+          },
           { key: "help", description: "この例の使い方を読みます。", label: "使い方", onClick: showHelp },
           { key: "guide", description: "図書を貸し出す手順を案内します。", label: "貸出の始め方", onClick: showGuide },
+          {
+            key: "clear-history",
+            description: "最近見た図書の履歴を消去します。",
+            label: "閲覧履歴を消去",
+            danger: true,
+            disabled: recentBooks.length === 0,
+            onClick: () => confirmDanger({
+              title: "閲覧履歴を消去しますか？",
+              content: "最近見た図書の一覧から履歴を消去します。",
+              okText: "消去",
+            }, () => setRecentBooks([])),
+          },
         ]}
       />
       <ProgressModal title="書き出し" progresses={progresses} open={progressOpen} onClose={() => setProgressOpen(false)} />
-      <BookListPanel title="最近見た図書" books={INITIAL_BOOKS.slice(0, 3)} empty="最近見た図書はありません。" onOpenBooks={onOpenBooks} />
-      <BookListPanel title="貸出中の図書" books={INITIAL_BOOKS.filter((b) => b.status === "貸出中")} empty="貸出中の図書はありません。" onOpenBooks={onOpenBooks} />
+      <PanelGroup columns={3}>
+        <BookListPanel title="最近見た図書" books={recentBooks} empty="最近見た図書はありません。" onOpenBooks={onOpenBooks} />
+        <BookListPanel title="貸出中の図書" books={INITIAL_BOOKS.filter((b) => b.status === "貸出中")} empty="貸出中の図書はありません。" onOpenBooks={onOpenBooks} />
+        <BookListPanel title="予約した図書" books={[]} empty="予約した図書はありません。" onOpenBooks={onOpenBooks} />
+      </PanelGroup>
       <HeadedCard title="貸出票の形">
         <ImageChoiceCards options={SLIP_CHOICES} value={slip} onChange={setSlip} hint="画像を押すと拡大し、カードの枠を押すと選びます。" />
       </HeadedCard>
-      <BookListPanel title="予約した図書" books={[]} empty="予約した図書はありません。" onOpenBooks={onOpenBooks} />
     </PanelPage>
   );
 }

@@ -8,7 +8,8 @@ import type { ConfigProviderProps } from "antd";
 import { useEffect, useLayoutEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { buildThemeConfig } from "./tokens";
-import { DesignValuesContext } from "./designValues";
+import { DesignValuesContext, PanelSaveButtonTypeContext } from "./designValues";
+import type { PanelSaveButtonType } from "./designValues";
 import { resolveLayoutTokens } from "./layoutTokens";
 import type { LayoutTokens } from "./layoutTokens";
 import { requiredMark } from "../fields/RequiredMark";
@@ -20,12 +21,21 @@ export type ThemeProviderProps = {
   primaryColor?: string;
   /** アプリ共通の列幅と余白。未指定の項目は共通の既定値を使う。 */
   layoutTokens?: LayoutTokens;
+  /** パネル内の保存ボタンの共通表示。省略時は primary。 */
+  panelSaveButtonType?: PanelSaveButtonType;
   /** antdのロケール（例: ja_JP）。画面の言葉は使う側が決めるため、渡してもらう */
   locale?: ConfigProviderProps["locale"];
   children: ReactNode;
 };
 
-export function ThemeProvider({ darkMode, primaryColor, layoutTokens, locale, children }: ThemeProviderProps) {
+export function ThemeProvider({
+  darkMode,
+  primaryColor,
+  layoutTokens,
+  panelSaveButtonType,
+  locale,
+  children,
+}: ThemeProviderProps) {
   const values = useMemo(() => resolveLayoutTokens(layoutTokens), [layoutTokens]);
   const { theme, form, scrollbar } = values;
   const configProviderProps = useMemo(
@@ -59,7 +69,9 @@ export function ThemeProvider({ darkMode, primaryColor, layoutTokens, locale, ch
         button={{ autoInsertSpace: false }}
         form={{ requiredMark }}
       >
-        <App>{children}</App>
+        <PanelSaveButtonTypeContext.Provider value={panelSaveButtonType}>
+          <App>{children}</App>
+        </PanelSaveButtonTypeContext.Provider>
       </ConfigProvider>
     </DesignValuesContext.Provider>
   );

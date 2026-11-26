@@ -93,6 +93,7 @@ export const defaultDesignValues: DesignValues = {
     pillRadius: 9999,
     empty: { maxWidth: 360, iconBoxSize: 44, iconSize: 22, iconStrokeWidth: 1.75 },
   },
+  panelLayout: { preferredMinWidth: 640 },
   panel: {
     pageGutter: 16,
     betweenPanels: 16,
@@ -101,10 +102,9 @@ export const defaultDesignValues: DesignValues = {
     relatedContent: 8,
   },
   form: { labelGap: 8, itemGap: 20 },
-  // 開始・終了時刻の入力欄（Col span 8、Row gutter token.margin）、複数行の文の欄で最も多い行数（2〜6）、
-  // 日付（YYYY-MM-DD（dd））・月（MONTH_PICKER_FORMAT）・時刻（HH:mm）の表示書式
+  // 開始・終了の組の幅と余白、複数行の文の行数、日付・月・時刻の表示書式
   field: {
-    pairColumnSpan: 8,
+    pairMinWidth: { default: 136, date: 160 },
     pairGapToken: "margin",
     textAreaRows: { minRows: 2, maxRows: 6 },
     formats: { date: "YYYY-MM-DD（dd）", month: "YYYY年M月", time: "HH:mm" },

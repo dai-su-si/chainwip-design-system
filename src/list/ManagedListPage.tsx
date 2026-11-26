@@ -7,7 +7,7 @@ import { cloneElement, isValidElement, useRef, useState } from "react";
 import type { HTMLAttributes, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { useDesignValues } from "../theme/designValues";
 import { AddButton } from "./AddButton";
-import { ACTIONS_COLUMN_PRIORITY, useColumnKinds } from "./columnKinds";
+import { ACTIONS_COLUMN_PRIORITY, MANAGED_ROW_ACTIONS_KEY, useColumnKinds } from "./columnKinds";
 import { DataTable } from "./DataTable";
 import { FilterToolbar } from "./FilterToolbar";
 import "./ManagedListPage.css";
@@ -321,7 +321,7 @@ export function ManagedListPage<Row extends object>({
 
   if (rowActions) {
     tableColumns.push({
-      key: "__chainwip_row_actions",
+      key: MANAGED_ROW_ACTIONS_KEY,
       title: "操作",
       ...ACTIONS_COLUMN_PRIORITY,
       width: actionsColumnWidth,
