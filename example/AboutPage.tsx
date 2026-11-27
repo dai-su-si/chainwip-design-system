@@ -1,4 +1,3 @@
-import { Typography } from "antd";
 import { useState } from "react";
 import {
   ActionPanel,
@@ -113,9 +112,9 @@ export function AboutPage({ onOpenBooks }: { onOpenBooks: () => void }) {
   return (
     <PanelPage>
       <HeadedCard title="この例について">
-        <Typography.Text>
+        <p>
           chainwip-design-system の部品だけで組んだ例です。データは画面の中だけにあり、再読み込みで最初に戻ります。
-        </Typography.Text>
+        </p>
       </HeadedCard>
       <ActionPanel
         title="操作"

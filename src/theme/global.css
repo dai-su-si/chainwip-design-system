@@ -50,3 +50,13 @@ body {
 [data-headed-card-body] form:last-child > .ant-form-item:last-child {
   margin-bottom: 0;
 }
+
+/* パネルの本文の最初と最後の要素は、外側の余白を持たない。本文の冒頭の説明の文（p・ul など）に付く
+   ブラウザーの既定の余白で、見出しから本文までの間（共通トークン）とパネルの下の余白が広がらないようにする */
+[data-headed-card-body] > :first-child {
+  margin-top: 0;
+}
+
+[data-headed-card-body] > :last-child {
+  margin-bottom: 0;
+}

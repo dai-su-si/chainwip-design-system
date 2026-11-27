@@ -42,12 +42,17 @@ async function auditActionPlacement(main, type, width) {
       const layout = await panel.evaluate((element) => {
         const heading = element.querySelector("[data-panel-heading]");
         const body = element.querySelector("[data-headed-card-body]");
+        const first = body?.firstElementChild;
+        const last = body?.lastElementChild;
         return {
           singleBody: heading?.nextElementSibling === body && body?.nextElementSibling === null,
           gap: body?.getBoundingClientRect().top - heading?.getBoundingClientRect().bottom,
+          firstMargin: first ? parseFloat(getComputedStyle(first).marginTop) : 0,
+          lastMargin: last ? parseFloat(getComputedStyle(last).marginBottom) : 0,
         };
       });
       assert.ok(layout.singleBody && Math.abs(layout.gap - 24) <= 1, "共通パネルは見出しと一つの本文を24pxで分ける");
+      assert.ok(layout.firstMargin === 0 && layout.lastMargin === 0, "本文の最初と最後の要素は外側の余白で見出しやパネルの下を広げない");
     }
     assert.equal(await content.locator("[data-page-actions]").count(), 0, "パネル構成型に画面単位のボタンを置かない");
   } else {

@@ -20,6 +20,8 @@ export type RangeCheck<Values = Store> = {
   rules?: FormRule[];
   /** 付けたとき、終了の欄を直せなくする（例: 参画中なら終了の月はない） */
   disablesEnd?: boolean;
+  /** チェックを変えられない表示だけにする（開始・終了の欄の disabled と同じ書き方） */
+  disabled?: boolean;
 };
 
 export type RangeFieldProps<Values = Store> = {
@@ -138,7 +140,7 @@ export function RangeField<Values = Store>(props: RangeFieldProps<Values>) {
           rules={check.rules}
           style={innerStyle}
         >
-          <Checkbox>{check.text}</Checkbox>
+          <Checkbox disabled={check.disabled}>{check.text}</Checkbox>
         </Form.Item>
       )}
     />
