@@ -7,7 +7,7 @@ TanStack Start と Cloudflare Workers を対象に、Ant Design で業務画面�
 React 19、Ant Design 6、TypeScript を使うコンポーネントライブラリです。GitHub のタグを指定してインストールします。依存バージョンは [package.json](package.json) の `peerDependencies` を参照してください。
 
 ```sh
-npm install git+https://github.com/dai-su-si/chainwip-design-system.git#v0.21.1
+npm install git+https://github.com/dai-su-si/chainwip-design-system.git#v0.22.0
 ```
 
 ```tsx
@@ -98,6 +98,7 @@ const menus: MenuItem[] = [
 ## 入力欄
 
 - 固定の選択肢から複数のタグを選ぶ場合は `TagCloudField` を使います。利用者は表示名で検索し、フォームは選んだ選択肢の値の配列を受け取ります。選んだタグを詳細や表に表示する場合は `PillTagList`、利用者が任意の語を追加する場合は `WordListField` を使います。
+- 欄の値の候補を作るなど、入力欄の補助操作は、`TagCloudField` の `assist` に `label` と `onClick` を渡します。ボタンは欄の右に白で並びます。押しても保存せず、利用側が結果を欄の値へ入れ、利用者が確かめてからパネルの保存で確定します。処理中は `loading` を指定します。
 - 選択肢や入力範囲で防げる誤りは、共通の入力欄を使って防ぎます。たとえば終了日に開始日より前の日を選べないようにする場合は、`RangeField` の終了側に `disabledDate` を渡します。
 - `RangeField` と `RangeListField` は、開始・終了・付随する操作の順序を共有します。入力欄には共通の最小幅を確保し、収まらない欄や操作は次の行へ折り返します。
 - 利用者が変えられない値は、変えられない表示にして防ぎます。`RangeField` の開始・終了の欄は `disabled`、3つ目の場所のチェックは `check.disabled` を指定します。

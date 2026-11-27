@@ -109,6 +109,12 @@ export function FieldsPage() {
   const openFrom = Form.useWatch("openFrom", form);
   const fromMonth = Form.useWatch("fromMonth", form);
   const closed = Form.useWatch("closed", form);
+  const [classForm] = Form.useForm<LoanValues>();
+  /** 欄の横の補助の操作。書名から分野の候補を、今の選択に足す（保存はしない） */
+  const guessGenres = () => {
+    const now = classForm.getFieldValue("genres") ?? [];
+    classForm.setFieldValue("genres", now.includes("astro") ? now : [...now, "astro"]);
+  };
   const savePanel = (title: string) => void message.success(`${title}を保存しました`);
   return (
     <PanelPage>
@@ -195,9 +201,15 @@ export function FieldsPage() {
           />
         </HeadedCard>
       </Form>
-      <Form<LoanValues> name="classification" layout="vertical" initialValues={INITIAL} onFinish={() => savePanel("分類")}>
+      <Form<LoanValues> name="classification" form={classForm} layout="vertical" initialValues={INITIAL} onFinish={() => savePanel("分類")}>
         <HeadedCard title="分類" extra={<PanelSaveButton />}>
-          <TagCloudField<LoanValues, Genre> name="genres" label="分野" options={GENRE_GROUPS} extra="空のままでも保存できます。" />
+          <TagCloudField<LoanValues, Genre>
+            name="genres"
+            label="分野"
+            options={GENRE_GROUPS}
+            extra="空のままでも保存できます。「分野推定」は書名から候補を足します。保存はしません。"
+            assist={{ label: "分野推定", onClick: guessGenres }}
+          />
           <WordListField<LoanValues> name="keywords" label="キーワード" extra="語を打って Enter で足します。" />
           <ImageChoiceField<LoanValues, Slip> name="slip" label="貸出票の形" options={SLIPS} />
           <CheckField<LoanValues> name="hidden" text="ほかの人に見せない" extra="付けると、作った人だけに見えます。" />

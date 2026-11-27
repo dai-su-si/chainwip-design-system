@@ -24,6 +24,16 @@ export type FieldBaseProps<Values = Store> = {
   validateFirst?: boolean;
 };
 
+/**
+ * 欄の横に置く補助の操作（例: 欄の値の候補を作る）。押しても保存しない。結果は利用側が欄の値へ入れ、利用者が直してから保存する。
+ * ボタンは白で、文字の幅にする。loading は、押した操作の途中だけ true にする
+ */
+export type FieldAssist = {
+  label: string;
+  onClick: () => void;
+  loading?: boolean;
+};
+
 /** 欄の共通の口を、antd の Form.Item の props にする */
 export function itemProps<Values>(p: FieldBaseProps<Values>): FormItemProps<Values> {
   return {

@@ -83,7 +83,7 @@ export { TagCloudField, ImageChoiceField } from "./fields/choiceFields";
 export type { TagCloudFieldProps, TagCloudAdapter, ImageChoiceFieldProps } from "./fields/choiceFields";
 export { WordListField } from "./fields/WordListField";
 export type { WordListFieldProps } from "./fields/WordListField";
-export type { FieldBaseProps, ControlKind, ControlOptions, PickerOptions } from "./fields/fieldBase";
+export type { FieldBaseProps, FieldAssist, ControlKind, ControlOptions, PickerOptions } from "./fields/fieldBase";
 // 欄の中身の部品（原子の欄が中で使う。Form.Item の外で値を持つときにも使える）
 export { TagCloud } from "./fields/TagCloud";
 export type { TagCloudProps, TagOption, TagOptionGroup } from "./fields/TagCloud";
