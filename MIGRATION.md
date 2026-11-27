@@ -55,6 +55,10 @@ v0.19 系では、標準の一覧とパネルを共通部品で組みます。�
 </Form>
 ```
 
+## サイドメニューの権限
+
+v0.21.1 から、`Sidebar.grantedPermissions` で項目の `permissions` による出し分けを共通の枠が行います。利用側で権限に応じて `hidden` を書き換えていた場合は、その処理を取り除きます。各項目に必要な権限を `permissions` に、利用者が持つ権限を `grantedPermissions` に渡します。使い方は [サイドメニュー](README.md#サイドメニュー) を参照してください。
+
 ## テーマ
 
 `ThemeProvider.values` と旧トークン API の参照を取り除きます。ブランド色は `ThemeProvider.primaryColor`、ロゴとアプリ名は `Sidebar.logoSrc` と `Sidebar.brandName` に渡します。対応版でアプリ共通の列幅や余白を変える場合は、[列幅と余白の設定](README.md#列幅と余白の設定) を参照してください。

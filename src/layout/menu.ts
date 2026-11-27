@@ -4,6 +4,7 @@ type BaseMenuNode = {
   name: string;
   /** アイコンの名前。Sidebar の iconFor で、lucideのアイコンに変える */
   icon: string | null;
+  /** 出すのに要る権限。Sidebar の grantedPermissions にどれかがあれば出す。null は全員に出す */
   permissions: string[] | null;
   sort: number;
   hidden: boolean;

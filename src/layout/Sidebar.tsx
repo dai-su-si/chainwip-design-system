@@ -1,5 +1,5 @@
 // サイドメニュー（雛形antd-adminのSider。992px未満ではDrawer）。上にロゴと名前、中にメニュー、下に利用者の欄。
-// メニューの項目（menus）、今のパス（pathname）、
+// メニューの項目（menus）、利用者が持つ権限（grantedPermissions）、今のパス（pathname）、
 // 移る処理（onNavigate）、開閉の状態、アイコンの名前とlucideのアイコンの対応（iconFor）、利用者の欄（account）は使う側が渡す。
 import { Menu, Layout, theme, Flex, Grid, Drawer, Button } from "antd";
 import { useEffect, useMemo, useState } from "react";
@@ -31,6 +31,13 @@ function renderMenuIcon(iconFor: MenuIconFor, icon: string | null, size: number)
   return <Icon size={size} />;
 }
 
+/** 項目を出すか。hidden の項目は出さない。grantedPermissions を渡したときは、permissions が null か、そのどれかを持つ項目だけを出す */
+function isShown(menu: MenuItemType, grantedPermissions: readonly string[] | undefined): boolean {
+  if (menu.hidden) return false;
+  if (!grantedPermissions || menu.permissions === null) return true;
+  return menu.permissions.some((p) => grantedPermissions.includes(p));
+}
+
 function buildMenuItems(
   menus: MenuItemType[],
   iconFor: MenuIconFor,
@@ -38,9 +45,10 @@ function buildMenuItems(
   frame: DesignValues["frame"],
   collapsed: boolean,
   iconSize: number,
+  grantedPermissions: readonly string[] | undefined,
   parentKeys: string[] = [],
 ): BuildMenuResult {
-  const sorted = menus.filter((m) => !m.hidden).sort((a, b) => a.sort - b.sort);
+  const sorted = menus.filter((m) => isShown(m, grantedPermissions)).sort((a, b) => a.sort - b.sort);
   const keyToPath: Record<string, string> = {};
   const pathToKeyChain: Record<string, string[]> = {};
   const items: AntMenuItem[] = [];
@@ -51,7 +59,7 @@ function buildMenuItems(
     const key = menu.id;
 
     if (menu.kind === "group") {
-      const built = buildMenuItems(menu.children, iconFor, token, frame, collapsed, iconSize, parentKeys);
+      const built = buildMenuItems(menu.children, iconFor, token, frame, collapsed, iconSize, grantedPermissions, parentKeys);
       Object.assign(keyToPath, built.keyToPath);
       Object.assign(pathToKeyChain, built.pathToKeyChain);
       if (built.items.length > 0) {
@@ -103,7 +111,7 @@ function buildMenuItems(
 
     let children: AntMenuItem[] | undefined;
     if (menu.children?.length) {
-      const built = buildMenuItems(menu.children, iconFor, token, frame, collapsed, iconSize, nextParents);
+      const built = buildMenuItems(menu.children, iconFor, token, frame, collapsed, iconSize, grantedPermissions, nextParents);
       Object.assign(keyToPath, built.keyToPath);
       Object.assign(pathToKeyChain, built.pathToKeyChain);
       children = built.items.length ? built.items : undefined;
@@ -122,6 +130,11 @@ function buildMenuItems(
 
 export type SidebarProps = {
   menus: MenuItemType[];
+  /**
+   * 利用者が持つ権限。渡すと、項目の permissions のどれかを持つ項目だけを出す（permissions が null の項目は全員に出す）。
+   * 出す項目が1つもない群は出さない。渡さなければ permissions で絞らない。権限の判定は使う側が行い、結果だけを渡す
+   */
+  grantedPermissions?: readonly string[];
   /** 今のパス（メニューの選んだ状態を決める） */
   pathname: string;
   /** メニューの項目を押したときに、その項目のパスへ移る */
@@ -140,6 +153,7 @@ export type SidebarProps = {
 
 export function Sidebar({
   menus,
+  grantedPermissions,
   pathname,
   onNavigate,
   iconFor,
@@ -156,8 +170,8 @@ export function Sidebar({
   const isMobile = !screens.lg;
   const mobileOpen = collapsed;
   const builtMenu = useMemo(
-    () => buildMenuItems(menus, iconFor, token, frame, !isMobile && collapsed, token.size),
-    [menus, iconFor, token, frame, isMobile, collapsed, token.size],
+    () => buildMenuItems(menus, iconFor, token, frame, !isMobile && collapsed, token.size, grantedPermissions),
+    [menus, iconFor, token, frame, isMobile, collapsed, token.size, grantedPermissions],
   );
   const { selectedKey, routeOpenKeys } = useMemo(() => {
     // 詳細の画面でも、もとの一覧のメニューを選んだ状態にする

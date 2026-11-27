@@ -7,7 +7,7 @@ TanStack Start と Cloudflare Workers を対象に、Ant Design で業務画面�
 React 19、Ant Design 6、TypeScript を使うコンポーネントライブラリです。GitHub のタグを指定してインストールします。依存バージョンは [package.json](package.json) の `peerDependencies` を参照してください。
 
 ```sh
-npm install git+https://github.com/dai-su-si/chainwip-design-system.git#v0.21.0
+npm install git+https://github.com/dai-su-si/chainwip-design-system.git#v0.21.1
 ```
 
 ```tsx
@@ -54,6 +54,38 @@ export function App() {
 | `spacing.formItemGap` | フォームの項目同士の間隔 | 20px |
 
 指定値は単位なしの数値で、列幅は正の有限値、余白は0以上の有限値を使用できます。`Em` で終わる列幅は基準文字サイズの倍数です。ほかの値の単位は px です。省略または無効な値には、その項目の既定値が適用されます。
+
+## サイドメニュー
+
+- メニューの項目と群は `MenuItem` で定義し、`Sidebar.menus`（`AppShell` では `sidebar.menus`）に渡します。
+- 権限で出し分ける項目には、出すのに必要な権限を `permissions` に指定します。全員に出す項目は `null` にします。
+- 利用者が持つ権限は、利用側が判定して `Sidebar.grantedPermissions` に渡します。`permissions` のどれかを持つ項目だけを表示し、表示する項目が1つもない群は見出しごと表示しません。
+- `grantedPermissions` を省略した場合、`permissions` による絞り込みは行いません。`hidden: true` の項目は、権限にかかわらず表示しません。
+
+```tsx
+const menus: MenuItem[] = [
+  {
+    id: "g-manage",
+    kind: "group",
+    name: "管理",
+    path: null,
+    icon: null,
+    permissions: null,
+    sort: 0,
+    hidden: false,
+    children: [
+      { id: "books", kind: "item", name: "蔵書管理", path: "/books", icon: "Book", children: null, permissions: ["book-admin"], sort: 0, hidden: false },
+      { id: "members", kind: "item", name: "会員管理", path: "/members", icon: "Users", children: null, permissions: ["member-admin"], sort: 1, hidden: false },
+    ],
+  },
+];
+
+<AppShell sidebar={{ menus, grantedPermissions: ["book-admin"], /* ほかの値 */ }} header={header}>
+  {children}
+</AppShell>;
+```
+
+この例では「蔵書管理」だけを表示します。権限が空の利用者には、群「管理」を表示しません。
 
 ## パネル構成型
 

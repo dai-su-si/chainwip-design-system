@@ -1,5 +1,9 @@
 # リリースノート
 
+## v0.21.1
+
+- `Sidebar` に `grantedPermissions` を追加しました。利用者が持つ権限を渡すと、`MenuItem.permissions` のどれかを持つ項目だけを表示し、表示する項目がない群は表示しません。`permissions` が `null` の項目は全員に表示します。省略した場合の表示は v0.21.0 と同じです。[サイドメニュー](README.md#サイドメニュー)
+
 ## v0.21.0
 
 - `RangeField` の3つ目の場所のチェック（`RangeCheck`）に `disabled` を追加しました。開始・終了の欄の `disabled` と同じく、変えられない値を表示だけにできます。
